@@ -1,3 +1,4 @@
+from random import choice
 from flask import Flask, render_template
 from dotenv import load_dotenv
 from os import getenv
@@ -7,6 +8,12 @@ from white_rabbit.utils.logger import LOGGER
 load_dotenv(override=True)
 
 app = Flask(__name__)
+
+def __load_nodes():
+    with open("white_rabbit/config/nodes.conf") as nodes_file:
+        return list(node.strip() for node in nodes_file.readlines())
+
+NODES = __load_nodes()
 
 # Redis configuration
 app.config['SESSION_TYPE'] = 'redis'
@@ -18,6 +25,10 @@ app.config['SESSION_REDIS'] = redis_url
 @app.route("/", methods=["GET"])
 def index():
     return render_template('index.html')
+
+@app.route("/rand-entity", methods=["GET"])
+def get_random_entity():
+    return str(choice(NODES))
 
 if __name__ == "__main__":
     LOGGER.info("Demo starting")
