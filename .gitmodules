@@ -1,0 +1,3 @@
+[submodule "white_rabbit"]
+	path = white_rabbit
+	url = https://github.com/Antibas/The-White-Rabbit-Algorithm

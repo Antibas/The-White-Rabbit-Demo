@@ -1,0 +1,24 @@
+services:
+  white-rabbit: 
+    container_name: white-rabbit
+    build: ./
+    restart: on-failure
+    networks:
+      - white-rabbit-network
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+  redis-server:
+    container_name: redis-server
+    image: redis:7.0.4
+    command: redis-server
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
+    networks:
+      - white-rabbit-network
+    volumes:
+      - redis-data:/var/lib/redis 
+    environment:
+      - REDIS_REPLICATION_MODE=master
+
+networks: 
+  white-rabbit-network:
