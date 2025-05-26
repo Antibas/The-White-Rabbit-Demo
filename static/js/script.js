@@ -6,12 +6,15 @@ function get_random_entity(writeIn){
     });
 }
 
-function toggle_algorithms(){
+function toggle_embedding(){
     const algorithm = document.getElementById('algorithm');
-    const testOtherAlgs = document.getElementById('testOtherAlgs');
-    algorithm.disabled = !testOtherAlgs.checked;
-    if(algorithm.disabled) {
-        algorithm.value = "white-rabbit";
+    const emb = document.getElementById('emb');
+    const embedding = document.getElementById('embedding');
+    if(algorithm.value == "embedding" && emb.classList.contains("visually-hidden")){
+        emb.classList.remove("visually-hidden");
+        embedding.readonly = true;
+    } else {
+        emb.classList.add("visually-hidden");
+        embedding.readonly = false;
     }
-
 }

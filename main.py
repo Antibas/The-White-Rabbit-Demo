@@ -1,19 +1,21 @@
+from json import dump, loads
 from random import choice
-from flask import Flask, render_template
+from flask import Flask, render_template, request
+from flask_socketio import SocketIO, emit
 from dotenv import load_dotenv
 from os import getenv
 from redis import from_url
+from utils import import_datasets, load_nodes
+from white_rabbit.utils.enums import EmbeddingType
 from white_rabbit.utils.logger import LOGGER
+from white_rabbit.utils.utils import load_model, timeout
 
 load_dotenv(override=True)
 
 app = Flask(__name__)
 
-def __load_nodes():
-    with open("white_rabbit/config/nodes.conf") as nodes_file:
-        return list(node.strip() for node in nodes_file.readlines())
 
-NODES = __load_nodes()
+NODES = load_nodes()
 
 # Redis configuration
 app.config['SESSION_TYPE'] = 'redis'
@@ -22,14 +24,70 @@ app.config['SESSION_USE_SIGNER'] = True
 redis_url = from_url('redis://'+getenv('REDIS_HOST', 'redis')+":"+getenv('REDIS_PORT', '6379'))
 app.config['SESSION_REDIS'] = redis_url
 
+# Socket
+socketio = SocketIO(app)
+
 @app.route("/", methods=["GET"])
 def index():
     return render_template('index.html')
+
+@app.route("/graph", methods=["POST"])
+def graph():
+    body = request.form
+    return render_template('graph.html', body=body)
 
 @app.route("/rand-entity", methods=["GET"])
 def get_random_entity():
     return str(choice(NODES))
 
+@socketio.on("message")
+def start_algorithm(msg: str):
+    params = {}
+    for param in loads(msg):
+        if param[1]:
+            params[param[0]] = param[1]
+    
+    source: str = params["source"]
+    target: str = params["target"]
+    
+    dataset = import_datasets()[params["dataset"]]
+    alg: str = params["algorithm"]
+    embedding = params.get("embedding")
+    if(alg.lower() in ["wr", "white-rabbit"]):
+        algorithm = dataset.white_rabbit
+    elif(alg.lower() in ["qe", "query-expansion"]):
+        algorithm = dataset.query_expansion
+    elif(alg.lower() == "embedding"):
+        algorithm = dataset.embedding
+        if embedding:
+            embedding = EmbeddingType[embedding]
+    elif(alg.lower() == "llm"):
+        algorithm = dataset.llm
+    LOGGER.info(f'Starting algorithm with parameters: {params}')
+
+    try:
+        accuracy_threshold = float(params.get("accuracy", 0))
+        if(accuracy_threshold <= 0 or accuracy_threshold > 1):
+            raise ValueError()
+    except ValueError:
+        LOGGER.error('response',"Invalid accuracy. Must be a float in (0, 1]")
+    
+    try:
+        timeout_seconds = int(params.get("timeout", 0))
+    except ValueError:
+        LOGGER.error(f"Invalid timeout. Changing to no timeout.")
+        timeout_seconds = 0
+    
+    inputs = (source, target, accuracy_threshold) if not embedding else (source, target, embedding, accuracy_threshold)
+    if timeout_seconds:
+        time, length, pc, ta, path = timeout(algorithm, inputs, embedding_type=embedding or EmbeddingType.WIKI2VEC, timeout=timeout_seconds)
+    else:
+        embedding_type=embedding or EmbeddingType.WIKI2VEC
+        model = load_model(embedding_type)
+        time, length, pc, ta, path = algorithm(model, *inputs)
+
+
 if __name__ == "__main__":
     LOGGER.info("Demo starting")
-    app.run(host=getenv("APP_HOST", "0.0.0.0"), port=getenv("APP_PORT", "8000"), debug=True)
+    # app.run(host=getenv("APP_HOST", "0.0.0.0"), port=getenv("APP_PORT", "8000"), debug=True)
+    socketio.run(app, host=getenv("APP_HOST", "0.0.0.0"), port=getenv("APP_PORT", "8000"), debug=True)

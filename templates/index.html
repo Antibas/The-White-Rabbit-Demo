@@ -22,7 +22,7 @@
                 <p class="text-center">The proliferation of Knowledge Graphs (KGs) in recent years has resulted in the generation of massive datasets now available online. Exploring these graphs to identify meaningful connections between entities is a valuable, yet challenging task. This is mainly due to the large size, the complexity, and the limited interfaces (i.e., SPARQL endpoints) they offer for their online exploration. In this paper, we focus on discovering high-quality paths between two entities in online KGs, using embeddings. First, we introduce the problem of context-aware path finding, which results into coherent paths including highly relevant entities.  Then, we introduce the White Rabbit, an approach that involves scoring entity neighbors using embeddings, prioritizing exploration through a queue-based mechanism, and iteratively refining the search process. We compare our approach with baselines including structural methods, various pretrained embedding methods, and a large language model oracle, showing the benefits of our approach in optimizing both the efficiency of the task and the quality of the retrieved paths.</p>
             </div>
         </header>
-        <form action="" class="container card flex py-3 px-3">
+        <form action="/graph" method="post" class="container card flex py-3 px-3">
             <div class="card-header text-center">
                 <h2 class="h2">Test the algorithm</h2>
                 <p class="sm">Fields with <span class="text-danger">*</span> are required.</p>
@@ -31,7 +31,7 @@
             <div class="card-body">
                 <label for="algorithm" class="form-label">Algorithm <span class="text-danger">*</span></label>
                 <div class="input-group">
-                    <select name="algorithm" id="algorithm" class="form-select" aria-label="Algorithm" disabled required>
+                    <select name="algorithm" id="algorithm" class="form-select" aria-label="Algorithm" readonly="readonly" required onchange="toggle_embedding()">
                         <option value="white-rabbit" selected>White Rabbit</option>
                         <option value="query-expansion">Query Expansion</option>
                         <option value="embedding">Pretrained Embeddings</option>
@@ -42,7 +42,7 @@
                 <div id="emb" class="visually-hidden">
                     <label for="embedding" class="form-label">Embedding <span class="text-danger">*</span></label>
                     <div class="input-group">
-                        <select name="embedding" id="embedding" class="form-select" aria-label="embedding" required>
+                        <select name="embedding" id="embedding" class="form-select" aria-label="embedding">
                             <option value="" selected>Select an embedding</option>
                             <option value="WORD2VEC">WORD2VEC</option>
                             <option value="FASTTEXT">FASTTEXT</option>
@@ -51,10 +51,10 @@
                     </div>
                 </div>
 
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="testOtherAlgs" onchange="toggle_algorithms()" required>
+                <!-- <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="testOtherAlgs" onchange="toggle_algorithms()">
                     <label class="form-check-label" for="testOtherAlgs">I want to test other algorithms</label>
-                </div>
+                </div> -->
 
                 <label for="dataset" class="form-label">Dataset <span class="text-danger">*</span></label>
                 <div class="input-group">
