@@ -8,6 +8,8 @@
         <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
         <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}"> -->
         <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+        <script type="text/javascript" src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
+        <link href="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.css" rel="stylesheet" />
         <link rel="stylesheet" href="static/css/styles.css">
         <link rel="shortcut icon" href="static/images/favicon.ico">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -16,24 +18,185 @@
         <input type="hidden" id="algorithm_body" value="{{body}}">
         <header class="header">
             <div class="container-xxl text-center">
-                <h1 class="h1">Output for {{ body['source'] }}-{{ body['target'] }}</h1>
+                <h1 class="h1">Algorithm {{ body['algorithm'] }}</h1>
+                <h3 class="h3" id="accuracy"></h3>
+                <h3 class="h3" id="timeout"></h3>
             </div>
         </header>
-        <div class="card">
-
+        <div class="container card py-3 px-3">
+            <div class="card-header text-center">
+                <h2 class="h2">Output for {{ body['source'] }} &rarr; {{ body['target'] }}</h2>
+                <p class="sm" id="wait">Please wait...</p>
+            </div>
+            
+            <div class="card-body text-center">
+                <div class="d-flex justify-content-center" id="loader">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+                <div class="visually-hidden " id="results">
+                    <div class="d-flex justify-content-center">
+                        <ul class="list-group list-group-horizontal">
+                            <li class="list-group-item" id="time"></li>
+                            <li class="list-group-item" id="length"></li>
+                            <li class="list-group-item" id="pc"></li>
+                            <li class="list-group-item" id="ta"></li>
+                        </ul>
+                    </div>
+                    <div class="d-flex justify-content-center mt-4">
+                        <!-- <h3 class="h3">Path:</h3> -->
+                        <div id="graph"></div>
+                    </div>
+                </div>
+            </div>
         </div>
         <footer class="footer text-center">
             <p class="text-muted">&copy; 2025. All rights reserved</p>
         </footer>
         <script>
-            const socket = io();
+            let edgeId = 1;
+            const nodes = new vis.DataSet([]);
+            const edges = new vis.DataSet([]);
 
+            const container = document.getElementById("graph");
+            const data = {
+                nodes: nodes,
+                edges: edges
+            };
+
+            const options = {
+                autoResize: true,
+                height: '100%',
+                width: '100%',
+                nodes: {
+                    color: {
+                        border: "#000000",
+                        background: "#ffffff",
+                        highlight: {
+                            border: "#ffffff",
+                            background: "#000000"
+                        }
+                    },
+                    font: {
+                        size: 14
+                    },
+                    shape: "dot",
+                    size: 20
+                },
+                edges: {
+                    color: {
+                        color: "#000000"
+                    },
+                    font: {
+                        size: 10
+                    }
+                },
+                physics: {
+                    enabled: true,
+                    stabilization: {
+                        iterations: 100,
+                        updateInterval: 25,
+                        fit: true // fit the view to nodes after stabilizing
+                    }
+                }
+            };
+
+            const network = new vis.Network(container, data, options);
+            network.once("stabilizationIterationsDone", function () {
+                network.setOptions({
+                    physics: { enabled: false },
+                    interaction: { dragNodes: false }
+
+                });
+
+                  // Fix positions
+                nodes.get().forEach(node => {
+                    nodes.update({ id: node.id, fixed: { x: true, y: true } });
+                });
+
+                // Center the graph in the view
+                network.fit({ animation: true });
+                // network.fit({
+                //     animation: {
+                //         duration: 1000,
+                //         easingFunction: "easeInOutQuad"
+                //     }
+                // });
+            });
+
+            function addNode(nodeId, label) {
+                try{
+                    let nodeLabel = nodeId
+                        .replace("ontology/", "")
+                        .replace("resource/", "")
+                        .replace("property/", "")
+                    label = Math.round(Number(label) * 100) / 100
+                    if(label == 0 || label == 1){
+                        nodes.add({ id: nodeId, label: nodeLabel, color: {
+                            border: "#ffffff",
+                            background: "#000000",
+                            font: {
+                                bold: {
+                                    mod: 'bold'
+                                }
+                            },
+                            highlight: {
+                                border: "#000000",
+                                background: "#ffffff"
+                            }
+                        }});
+                    } else {
+                        nodes.add({ id: nodeId, label: `${nodeLabel}: ${label}` });
+                    }
+                } catch(error) {
+                    console.log(error)
+                }
+            }
+
+            function addEdge(label, from, to) {
+                // if(label == "reached") return;
+                label = label
+                        .replace("ontology/", "")
+                        .replace("resource/", "")
+                        .replace("property/", "")
+                edges.add({ id: edgeId, from: from, to: to, label: label });
+                edgeId++;
+            }
+
+            const socket = io();
             socket.on('connect', () => {
                 console.log('Connected to WebSocket');
             });
 
             socket.on('response', function(data) {
-                console.log(data)
+                console.log(data);
+                if("error" in data){
+
+                } else {
+                    document.getElementById("wait").innerHTML = "";
+                    const loader = document.getElementById("loader");
+                    const results = document.getElementById("results");
+                    loader.classList.add("visually-hidden");
+                    results.classList.remove("visually-hidden")
+
+                    document.getElementById("time").innerHTML = `<span class="fw-bold">Time:</span> ${data['time']} seconds`
+                    document.getElementById("length").innerHTML = `<span class="fw-bold">Length:</span> ${data['length']}`
+                    document.getElementById("pc").innerHTML = `<span class="fw-bold">PC:</span> ${data['PC']}`
+                    document.getElementById("ta").innerHTML = `<span class="fw-bold">TA:</span> ${data['TA']}`
+
+                    const paths = data["path"];
+                    for(let path of paths){
+
+                        let label1 = path[0][0].replace("http://dbpedia.org/", "");
+                        let label2 = path[2][0].replace("http://dbpedia.org/", "");
+                        let edgeLabel = path[1].replace("http://dbpedia.org/", "");
+                        if(edgeLabel == "reached") break;
+                        addNode(label1, path[0][1]);
+                        addNode(label2, path[2][1]);
+                        addEdge(edgeLabel, label1, label2)
+                    }
+                }
             });
 
             document.addEventListener("DOMContentLoaded", (ev) => {
@@ -42,8 +205,20 @@
                     .replaceAll("(", "[")
                     .replaceAll(")", "]")
                     .replaceAll("'", "\"");
-                // console.log(JSON.parse(algorithm_body))
-                socket.send(algorithm_body.substring(1, algorithm_body.length-1));
+                algorithm_body = JSON.parse(algorithm_body)[0];
+                console.log(algorithm_body);
+                // console.log(algorithm_body[0]);
+                // console.log(algorithm_body[5][0]);
+                const accuracy = document.getElementById("accuracy");
+                const timeout = document.getElementById("timeout");
+                accuracy.innerHTML = `Accuracy: ${algorithm_body[5][1]||1}`
+                if(algorithm_body[6][1]){
+                    timeout.innerHTML = `Timeout in ${algorithm_body[6][1]} seconds`
+                }
+                else {
+                    timeout.innerHTML = "No timeout"
+                }
+                socket.send(JSON.stringify(algorithm_body));
             })
 
         </script>

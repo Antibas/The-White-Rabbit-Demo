@@ -66,7 +66,7 @@ def start_algorithm(msg: str):
     LOGGER.info(f'Starting algorithm with parameters: {params}')
 
     try:
-        accuracy_threshold = float(params.get("accuracy", 0))
+        accuracy_threshold = float(params.get("accuracy", 1))
         if(accuracy_threshold <= 0 or accuracy_threshold > 1):
             raise ValueError()
     except ValueError:
@@ -85,7 +85,7 @@ def start_algorithm(msg: str):
         embedding_type=embedding or EmbeddingType.WIKI2VEC
         model = load_model(embedding_type)
         time, length, pc, ta, path = algorithm(model, *inputs)
-
+    emit('response', {"time": time, "length": length, "PC": pc, "TA": ta, "path": path})
 
 if __name__ == "__main__":
     LOGGER.info("Demo starting")
