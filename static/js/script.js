@@ -13,9 +13,25 @@ function toggle_embedding(){
     if(algorithm.value == "embedding" && emb.classList.contains("visually-hidden")){
         emb.classList.remove("visually-hidden");
         embedding.readonly = true;
+        embedding.required = true;
     } else {
         emb.classList.add("visually-hidden");
         embedding.readonly = false;
+        embedding.required = false;
+    }
+}
+
+function toggle_token(){
+    const tk = document.getElementById('tk');
+    const token = document.getElementById('token');
+    if(algorithm.value == "llm" && tk.classList.contains("visually-hidden")){
+        tk.classList.remove("visually-hidden");
+        token.readonly = true;
+        token.required = true;
+    } else {
+        tk.classList.add("visually-hidden");
+        token.readonly = false;
+        token.required = false;
     }
 }
 

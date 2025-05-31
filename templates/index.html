@@ -31,7 +31,7 @@
             <div class="card-body">
                 <label for="algorithm" class="form-label">Algorithm <span class="text-danger">*</span></label>
                 <div class="input-group">
-                    <select name="algorithm" id="algorithm" class="form-select" aria-label="Algorithm" readonly="readonly" required onchange="toggle_embedding()">
+                    <select name="algorithm" id="algorithm" class="form-select" aria-label="Algorithm" readonly="readonly" required onchange="toggle_embedding(); toggle_token()">
                         <option value="white-rabbit" selected>White Rabbit</option>
                         <option value="query-expansion">Query Expansion</option>
                         <option value="embedding">Pretrained Embeddings</option>
@@ -43,11 +43,18 @@
                     <label for="embedding" class="form-label">Embedding <span class="text-danger">*</span></label>
                     <div class="input-group">
                         <select name="embedding" id="embedding" class="form-select" aria-label="embedding">
-                            <option value="" selected>Select an embedding</option>
+                            <option value="" selected disabled>Select an embedding</option>
                             <option value="WORD2VEC">WORD2VEC</option>
                             <option value="FASTTEXT">FASTTEXT</option>
                             <option value="SBERT">SBERT</option>
                         </select>
+                    </div>
+                </div>
+
+                <div id="tk" class="visually-hidden">
+                    <label for="token" class="form-label">Token <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <input type="text" name="token" id="token" class="form-control">
                     </div>
                 </div>
 

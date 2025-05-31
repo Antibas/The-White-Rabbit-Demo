@@ -55,14 +55,17 @@ def start_algorithm(msg: str):
     embedding = params.get("embedding")
     if(alg.lower() in ["wr", "white-rabbit"]):
         algorithm = dataset.white_rabbit
+        embedding = None
     elif(alg.lower() in ["qe", "query-expansion"]):
         algorithm = dataset.query_expansion
+        embedding = None
     elif(alg.lower() == "embedding"):
         algorithm = dataset.embedding
         if embedding:
             embedding = EmbeddingType[embedding]
     elif(alg.lower() == "llm"):
         algorithm = dataset.llm
+        embedding = None
     LOGGER.info(f'Starting algorithm with parameters: {params}')
 
     try:
@@ -83,7 +86,10 @@ def start_algorithm(msg: str):
         time, length, pc, ta, path = timeout(algorithm, inputs, embedding_type=embedding or EmbeddingType.WIKI2VEC, timeout=timeout_seconds)
     else:
         embedding_type=embedding or EmbeddingType.WIKI2VEC
-        model = load_model(embedding_type)
+        try:
+            model = load_model(embedding_type)
+        except UserWarning:
+            pass
         time, length, pc, ta, path = algorithm(model, *inputs)
     emit('response', {"time": time, "length": length, "PC": pc, "TA": ta, "path": path})
 

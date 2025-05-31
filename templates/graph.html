@@ -19,6 +19,8 @@
         <header class="header">
             <div class="container-xxl text-center">
                 <h1 class="h1">Algorithm {{ body['algorithm'] }}</h1>
+                <h3 class="h3 visually-hidden" id="embedding"></h3>
+                <h3 class="h3" id="dataset"></h3>
                 <h3 class="h3" id="accuracy"></h3>
                 <h3 class="h3" id="timeout"></h3>
             </div>
@@ -73,6 +75,14 @@
             const loader = document.getElementById("loader");
             const results = document.getElementById("results");
             const error = document.getElementById("error");
+
+            let time = 0;
+            let pathLength = 0;
+            let pc = 0;
+            let ta = 0;
+            let paths = [];
+
+            const algo_body = document.getElementById("algorithm_body");
 
             const options = {
                 autoResize: true,
@@ -134,12 +144,12 @@
                 // });
             });
 
-            function addNode(nodeId, label, pathLength) {
+            function addNode(nodeId, label) {
                 try{
                     let nodeLabel = clearEntity(nodeId);
                     label = round(Number(label), 2)
                     // if(label == 0 || label == 1){
-                    if(label == 0 || label == 1 || nodes.length == 0 || nodes.length == pathLength){
+                    if(nodes.length == 0 || nodes.length == pathLength){
                         nodes.add({ id: nodeId, label: nodeLabel, color: {
                             border: "#ffffff",
                             background: "#000000",
@@ -183,6 +193,8 @@
                     .replace("http://www.wikidata.org/", "")
                     .replace("http://yago-knowledge.org/", "")
                     .replace("http://schema.org/", "")
+                    .replace("http://purl.org/", "")
+                    .replace("http://w3.org/", "")
                     .replace("ontology/", "")
                     .replace("resource/", "")
                     .replace("property/", "")
@@ -202,10 +214,10 @@
                         let data2 = data
                             .replace("Similarity between ", "")
                             .trim()
-                            .split(":");
+                            .split(":", 2);
                         let entities = data2[0].split(" and ")
                         let similarity = round(Number(data2[1].trim()), 2);
-                        document.getElementById("logger").innerHTML = `${entities[1].trim()}: ${similarity}`
+                        if(entities[1]) document.getElementById("logger").innerHTML = `${entities[1].trim()}: ${similarity}`
                     } else {
                         document.getElementById("logger").innerText = data
                     }
@@ -214,22 +226,27 @@
                 } else if(data['length']){
                     document.getElementById("wait").innerHTML = "";
                     loader.classList.add("visually-hidden");
-                    results.classList.remove("visually-hidden")
+                    results.classList.remove("visually-hidden");
 
-                    document.getElementById("time").innerHTML = `<span class="fw-bold">Time:</span> ${data['time']} seconds`
-                    document.getElementById("length").innerHTML = `<span class="fw-bold">Length:</span> ${data['length']}`
-                    document.getElementById("pc").innerHTML = `<span class="fw-bold">PC:</span> ${data['PC']}`
-                    document.getElementById("ta").innerHTML = `<span class="fw-bold">TA:</span> ${data['TA']}`
+                    time = data["time"];
+                    pathLength = data["length"];
+                    pc = data["PC"];
+                    ta = data["TA"];
+                    paths = data["path"];
+                    if(pathLength == 1) pathLength = Math.max(pathLength, paths.length);
 
-                    const paths = data["path"];
+                    document.getElementById("time").innerHTML = `<span class="fw-bold">Time:</span> ${time} seconds`
+                    document.getElementById("length").innerHTML = `<span class="fw-bold">Length:</span> ${pathLength}`
+                    document.getElementById("pc").innerHTML = `<span class="fw-bold">PC:</span> ${pc}`
+                    document.getElementById("ta").innerHTML = `<span class="fw-bold">TA:</span> ${ta}`
+
                     for(let path of paths){
-
                         let label1 = clearEntity(path[0][0]);
                         let label2 = clearEntity(path[2][0]);
                         let edgeLabel = clearEntity(path[1]);
                         if(edgeLabel == "reached") break;
-                        addNode(label1, path[0][1], data["length"]);
-                        addNode(label2, path[2][1], data["length"]);
+                        addNode(label1, path[0][1]);
+                        addNode(label2, path[2][1]);
                         addEdge(edgeLabel, label1, label2)
                     }
                 } else {
@@ -238,23 +255,29 @@
             });
 
             document.addEventListener("DOMContentLoaded", (ev) => {
-                let algorithm_body = document.getElementById("algorithm_body").value;
+                let algorithm_body = algo_body.value;
                 algorithm_body = algorithm_body.replace("ImmutableMultiDict", "")
                     .replaceAll("(", "[")
                     .replaceAll(")", "]")
                     .replaceAll("'", "\"");
                 algorithm_body = JSON.parse(algorithm_body)[0];
                 console.log(algorithm_body);
-                // console.log(algorithm_body[0]);
                 // console.log(algorithm_body[5][0]);
                 const accuracy = document.getElementById("accuracy");
                 const timeout = document.getElementById("timeout");
+                const dataset = document.getElementById("dataset");
+                const embedding = document.getElementById("embedding");
                 accuracy.innerHTML = `Accuracy: ${algorithm_body[5][1]||1}`
                 if(algorithm_body[6][1]){
                     timeout.innerHTML = `Timeout in ${algorithm_body[6][1]} seconds`
                 }
                 else {
                     timeout.innerHTML = "No timeout"
+                }
+                dataset.innerHTML = `Dataset: ${algorithm_body[2][1]}`
+                if(algorithm_body[0][1] === "embedding"){
+                    embedding.classList.remove("visually-hidden")
+                    embedding.innerHTML = `Embedding: ${algorithm_body[1][1]}`
                 }
                 socket.send(JSON.stringify(algorithm_body));
             })
