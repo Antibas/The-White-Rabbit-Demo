@@ -70,12 +70,12 @@ def start_algorithm(msg: str):
         if(accuracy_threshold <= 0 or accuracy_threshold > 1):
             raise ValueError()
     except ValueError:
-        LOGGER.error('response',"Invalid accuracy. Must be a float in (0, 1]")
+        emit('response', {"status": 422, "error": "Invalid accuracy. Must be a float in (0, 1]"})
     
     try:
         timeout_seconds = int(params.get("timeout", 0))
     except ValueError:
-        LOGGER.error(f"Invalid timeout. Changing to no timeout.")
+        emit('response', {"status": 422, "error": "Invalid timeout. Changing to no timeout."})
         timeout_seconds = 0
     
     inputs = (source, target, accuracy_threshold) if not embedding else (source, target, embedding, accuracy_threshold)

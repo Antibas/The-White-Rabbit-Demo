@@ -30,12 +30,17 @@
             </div>
             
             <div class="card-body text-center">
-                <div class="d-flex justify-content-center" id="loader">
+                <div class="block justify-content-center" id="loader">
                     <div class="spinner-border" role="status">
                         <span class="sr-only">Loading...</span>
                     </div>
+                    <h3 class="h3 container mt-4" id="logger">
+
+                    </h3>
                 </div>
-                <div class="visually-hidden " id="results">
+                <h3 class="h3 alert alert-danger visually-hidden" role="alert" id="error">
+                </h3>
+                <div class="visually-hidden" id="results">
                     <div class="d-flex justify-content-center">
                         <ul class="list-group list-group-horizontal">
                             <li class="list-group-item" id="time"></li>
@@ -54,6 +59,7 @@
         <footer class="footer text-center">
             <p class="text-muted">&copy; 2025. All rights reserved</p>
         </footer>
+        <script src="static/js/script.js"></script>
         <script>
             let edgeId = 1;
             const nodes = new vis.DataSet([]);
@@ -64,6 +70,9 @@
                 nodes: nodes,
                 edges: edges
             };
+            const loader = document.getElementById("loader");
+            const results = document.getElementById("results");
+            const error = document.getElementById("error");
 
             const options = {
                 autoResize: true,
@@ -74,8 +83,8 @@
                         border: "#000000",
                         background: "#ffffff",
                         highlight: {
-                            border: "#ffffff",
-                            background: "#000000"
+                            border: "#000000",
+                            background: "#ffffff"
                         }
                     },
                     font: {
@@ -125,14 +134,12 @@
                 // });
             });
 
-            function addNode(nodeId, label) {
+            function addNode(nodeId, label, pathLength) {
                 try{
-                    let nodeLabel = nodeId
-                        .replace("ontology/", "")
-                        .replace("resource/", "")
-                        .replace("property/", "")
-                    label = Math.round(Number(label) * 100) / 100
-                    if(label == 0 || label == 1){
+                    let nodeLabel = clearEntity(nodeId);
+                    label = round(Number(label), 2)
+                    // if(label == 0 || label == 1){
+                    if(label == 0 || label == 1 || nodes.length == 0 || nodes.length == pathLength){
                         nodes.add({ id: nodeId, label: nodeLabel, color: {
                             border: "#ffffff",
                             background: "#000000",
@@ -142,24 +149,21 @@
                                 }
                             },
                             highlight: {
-                                border: "#000000",
-                                background: "#ffffff"
+                                border: "#ffffff",
+                                background: "#000000"
                             }
                         }});
                     } else {
                         nodes.add({ id: nodeId, label: `${nodeLabel}: ${label}` });
                     }
-                } catch(error) {
-                    console.log(error)
+                } catch(err) {
+                    console.log(err)
                 }
             }
 
             function addEdge(label, from, to) {
                 // if(label == "reached") return;
-                label = label
-                        .replace("ontology/", "")
-                        .replace("resource/", "")
-                        .replace("property/", "")
+                label = clearEntity(label)
                 edges.add({ id: edgeId, from: from, to: to, label: label });
                 edgeId++;
             }
@@ -169,14 +173,46 @@
                 console.log('Connected to WebSocket');
             });
 
+            // socket.on('response', function(text){
+            //     console.log(text);
+            // })
+
+            function clearEntity(entity){
+                return entity
+                    .replace("http://dbpedia.org/", "")
+                    .replace("http://www.wikidata.org/", "")
+                    .replace("http://yago-knowledge.org/", "")
+                    .replace("http://schema.org/", "")
+                    .replace("ontology/", "")
+                    .replace("resource/", "")
+                    .replace("property/", "")
+                    .replace("entity/", "")
+            }
+
+            function handleError(status, error_msg){
+                loader.classList.add("visually-hidden");
+                error.classList.remove("visually-hidden");
+                document.getElementById("error").innerHTML = `<span class="fw-bold">Error ${status}:</span> ${error_msg}`
+            }
+
             socket.on('response', function(data) {
                 console.log(data);
-                if("error" in data){
-
-                } else {
+                if(!JSON.stringify(data).startsWith("{")){
+                    if(data.startsWith("Similarity between ")){
+                        let data2 = data
+                            .replace("Similarity between ", "")
+                            .trim()
+                            .split(":");
+                        let entities = data2[0].split(" and ")
+                        let similarity = round(Number(data2[1].trim()), 2);
+                        document.getElementById("logger").innerHTML = `${entities[1].trim()}: ${similarity}`
+                    } else {
+                        document.getElementById("logger").innerText = data
+                    }
+                } else if("error" in data){
+                    handleError(data['status'], data['error']);
+                } else if(data['length']){
                     document.getElementById("wait").innerHTML = "";
-                    const loader = document.getElementById("loader");
-                    const results = document.getElementById("results");
                     loader.classList.add("visually-hidden");
                     results.classList.remove("visually-hidden")
 
@@ -188,14 +224,16 @@
                     const paths = data["path"];
                     for(let path of paths){
 
-                        let label1 = path[0][0].replace("http://dbpedia.org/", "");
-                        let label2 = path[2][0].replace("http://dbpedia.org/", "");
-                        let edgeLabel = path[1].replace("http://dbpedia.org/", "");
+                        let label1 = clearEntity(path[0][0]);
+                        let label2 = clearEntity(path[2][0]);
+                        let edgeLabel = clearEntity(path[1]);
                         if(edgeLabel == "reached") break;
-                        addNode(label1, path[0][1]);
-                        addNode(label2, path[2][1]);
+                        addNode(label1, path[0][1], data["length"]);
+                        addNode(label2, path[2][1], data["length"]);
                         addEdge(edgeLabel, label1, label2)
                     }
+                } else {
+                    handleError(504, "Timeout");
                 }
             });
 
@@ -222,7 +260,7 @@
             })
 
         </script>
-        <script src="static/js/script.js"></script>
+        <!-- <script src="static/js/script.js"></script> -->
         <!-- <script src="{{ url_for('static', filename='js/script.js') }}"></script> -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     </body>

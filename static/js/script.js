@@ -18,3 +18,7 @@ function toggle_embedding(){
         embedding.readonly = false;
     }
 }
+
+function round(number, digits){
+    return Math.round(number * 10**digits) / 10**digits
+}
