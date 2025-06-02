@@ -19,14 +19,16 @@
         <header class="header">
             <div class="container-xxl text-center">
                 <h1 class="h1">Algorithm {{ body['algorithm'] }}</h1>
-                <h3 class="h3 visually-hidden" id="embedding"></h3>
-                <h3 class="h3" id="dataset"></h3>
-                <h3 class="h3" id="accuracy"></h3>
-                <h3 class="h3" id="timeout"></h3>
+                <div class="bg-white rounded-pill my-4">
+                    <h3 class="h3 visually-hidden" id="embedding"></h3>
+                    <h3 class="h3" id="dataset"></h3>
+                    <h3 class="h3" id="accuracy"></h3>
+                    <h3 class="h3" id="timeout"></h3>
+                </div>
             </div>
         </header>
         <div class="container card py-3 px-3">
-            <div class="card-header text-center">
+            <div class="card-header shadow-lg text-center">
                 <h2 class="h2">Output for {{ body['source'] }} &rarr; {{ body['target'] }}</h2>
                 <p class="sm" id="wait">Please wait...</p>
             </div>
@@ -36,9 +38,20 @@
                     <div class="spinner-border" role="status">
                         <span class="sr-only">Loading...</span>
                     </div>
-                    <h3 class="h3 container mt-4" id="logger">
+                    <div class="d-flex justify-content-center">
+                        <ul class="list-group list-group-horizontal-lg mt-4" id="current_node_similarity">
+                            <li class="list-group-item text-wrap">
+                                <h3 class="h3" id="current_node">
 
-                    </h3>
+                                </h3>
+                            </li>
+                            <li class="list-group-item">
+                                <h3 class="h3" id="similarity">
+
+                                </h3>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
                 <h3 class="h3 alert alert-danger visually-hidden" role="alert" id="error">
                 </h3>
@@ -58,8 +71,8 @@
                 </div>
             </div>
         </div>
-        <footer class="footer text-center">
-            <p class="text-muted">&copy; 2025. All rights reserved</p>
+        <footer class="footer text-center mt-2">
+            <p class="text-muted">&copy; 2025. All rights reserved.</p>
         </footer>
         <script src="static/js/script.js"></script>
         <script>
@@ -91,10 +104,10 @@
                 nodes: {
                     color: {
                         border: "#000000",
-                        background: "#ffffff",
+                        background: "#e6b000",
                         highlight: {
                             border: "#000000",
-                            background: "#ffffff"
+                            background: "#e6b000"
                         }
                     },
                     font: {
@@ -151,7 +164,7 @@
                     // if(label == 0 || label == 1){
                     if(nodes.length == 0 || nodes.length == pathLength){
                         nodes.add({ id: nodeId, label: nodeLabel, color: {
-                            border: "#ffffff",
+                            border: "#e6b000",
                             background: "#000000",
                             font: {
                                 bold: {
@@ -159,7 +172,7 @@
                                 }
                             },
                             highlight: {
-                                border: "#ffffff",
+                                border: "#e6b000",
                                 background: "#000000"
                             }
                         }});
@@ -217,7 +230,10 @@
                             .split(":", 2);
                         let entities = data2[0].split(" and ")
                         let similarity = round(Number(data2[1].trim()), 2);
-                        if(entities[1]) document.getElementById("logger").innerHTML = `${entities[1].trim()}: ${similarity}`
+                        if(entities[1]){
+                            document.getElementById("current_node").innerHTML = entities[1].trim();
+                            document.getElementById("similarity").innerHTML = similarity;
+                        }
                     } else {
                         document.getElementById("logger").innerText = data
                     }

@@ -15,21 +15,22 @@
         <header class="header">
             <div class="container-xxl text-center">
                 <h1 class="h1">Welcome to the White Rabbit demo</h1>
-                <p>This is a demo of the White Rabbit pathfinding algorithm. Here you can test our algorithm along with various others to make the comparison.</p>
+                <p class="rounded py-3 shadow-lg mb-5 bg-white">This is a demo of the White Rabbit pathfinding algorithm. Here you can test our algorithm along with various others to make the comparison.</p>
             </div>
-            <div class="container text-center">
-                <h2 class="h2 text-center">Abstract</h2>
-                <p class="text-center">The proliferation of Knowledge Graphs (KGs) in recent years has resulted in the generation of massive datasets now available online. Exploring these graphs to identify meaningful connections between entities is a valuable, yet challenging task. This is mainly due to the large size, the complexity, and the limited interfaces (i.e., SPARQL endpoints) they offer for their online exploration. In this paper, we focus on discovering high-quality paths between two entities in online KGs, using embeddings. First, we introduce the problem of context-aware path finding, which results into coherent paths including highly relevant entities.  Then, we introduce the White Rabbit, an approach that involves scoring entity neighbors using embeddings, prioritizing exploration through a queue-based mechanism, and iteratively refining the search process. We compare our approach with baselines including structural methods, various pretrained embedding methods, and a large language model oracle, showing the benefits of our approach in optimizing both the efficiency of the task and the quality of the retrieved paths.</p>
+            <div class="container-xxl text-center">
+                <h2 class="h2 text-center mb-2">Abstract</h2>
+                <p class="text-center rounded py-3 shadow-lg mb-5 bg-white text-wrap">The proliferation of Knowledge Graphs (KGs) in recent years has resulted in the generation of massive datasets now available online. Exploring these graphs to identify meaningful connections between entities is a valuable, yet challenging task. This is mainly due to the large size, the complexity, and the limited interfaces (i.e., SPARQL endpoints) they offer for their online exploration. In this paper, we focus on discovering high-quality paths between two entities in online KGs, using embeddings. First, we introduce the problem of context-aware path finding, which results into coherent paths including highly relevant entities.  Then, we introduce the White Rabbit, an approach that involves scoring entity neighbors using embeddings, prioritizing exploration through a queue-based mechanism, and iteratively refining the search process. We compare our approach with baselines including structural methods, various pretrained embedding methods, and a large language model oracle, showing the benefits of our approach in optimizing both the efficiency of the task and the quality of the retrieved paths.</p>
             </div>
         </header>
-        <form action="/graph" method="post" class="container card flex py-3 px-3">
-            <div class="card-header text-center">
+        <form action="/graph" method="post" class="container card py-3 rounded shadow-lg">
+            <div class="card-header shadow-lg text-center align-middle flex">
                 <h2 class="h2">Test the algorithm</h2>
                 <p class="sm">Fields with <span class="text-danger">*</span> are required.</p>
             </div>
             
             <div class="card-body">
                 <label for="algorithm" class="form-label">Algorithm <span class="text-danger">*</span></label>
+                <p class="text-muted form-sublabel">The algorithm you want to test.</p>
                 <div class="input-group">
                     <select name="algorithm" id="algorithm" class="form-select" aria-label="Algorithm" readonly="readonly" required onchange="toggle_embedding(); toggle_token()">
                         <option value="white-rabbit" selected>White Rabbit</option>
@@ -41,6 +42,7 @@
 
                 <div id="emb" class="visually-hidden">
                     <label for="embedding" class="form-label">Embedding <span class="text-danger">*</span></label>
+                    <p class="text-muted form-sublabel">The pretrained embedding you want to test.</p>
                     <div class="input-group">
                         <select name="embedding" id="embedding" class="form-select" aria-label="embedding">
                             <option value="" selected disabled>Select an embedding</option>
@@ -52,9 +54,10 @@
                 </div>
 
                 <div id="tk" class="visually-hidden">
-                    <label for="token" class="form-label">Token <span class="text-danger">*</span></label>
+                    <label for="token" class="form-label">Anthropic API Key <span class="text-danger">*</span></label>
+                    <p class="text-muted form-sublabel">You need to provide an Anthropic API key to test LLM.</p>
                     <div class="input-group">
-                        <input type="text" name="token" id="token" class="form-control">
+                        <input type="text" name="token" id="token" class="form-control" placeholder="e.g. sk-ant-api03-XXXX...">
                     </div>
                 </div>
 
@@ -64,9 +67,10 @@
                 </div> -->
 
                 <label for="dataset" class="form-label">Dataset <span class="text-danger">*</span></label>
+                <p class="text-muted form-sublabel">The dataset you want to test your algorithm on.</p>
                 <div class="input-group">
                     <select name="dataset" id="dataset" class="form-select" aria-label="Dataset" required>
-                        <option value="" selected disabled>Select a dataset</option>
+                        <option value="" selected disabled>&mdash;</option>
                         <option value="DBPEDIA">DBPEDIA</option>
                         <option value="WIKIDATA">WIKIDATA</option>
                         <option value="YAGO">YAGO</option>
@@ -74,32 +78,36 @@
                 </div>
 
                 <label for="source" class="form-label">Source <span class="text-danger">*</span> </label>
+                <p class="text-muted form-sublabel">The source entity.</p>
                 <div class="input-group">
                     <button type="button" class="btn btn-outline-primary" id="input-group-button-left" onclick="get_random_entity('source')">Randomize</button>
                     <input type="text" name="source" id="source" class="form-control" placeholder="e.g. Athens, Albert_Einstein" aria-label="Source" aria-describedby="input-group-left" required>
                 </div>
 
                 <label for="target" class="form-label">Target <span class="text-danger">*</span> </label>
+                <p class="text-muted form-sublabel">The target entity.</p>
                 <div class="input-group">
                     <button type="button" class="btn btn-outline-primary" id="input-group-button-left" onclick="get_random_entity('target')">Randomize</button>
                     <input type="text" name="target" id="target" class="form-control" placeholder="e.g. Athens, Albert_Einstein" aria-label="Source" aria-describedby="input-group-left" required>
                 </div>
 
                 <label for="accuracy" class="form-label">Accuracy Threshold</label>
+                <p class="text-muted form-sublabel">The accuracy threshold the algorithm will expect to stop. <span class="fw-bold">Default value: 1</span></p>
                 <div class="input-group">
-                    <input type="number" min="0.05" max="1" step="0.05" name="accuracy" id="accuracy" class="form-control" placeholder="The accuracy the algorithm will expect to stop" aria-label="Source" aria-describedby="input-group-left">
+                    <input type="number" min="0.05" max="1" step="0.05" name="accuracy" id="accuracy" class="form-control" placeholder="e.g. 0.75, 0.9" aria-label="Source" aria-describedby="input-group-left">
                 </div>
 
                 <label for="timeout" class="form-label">Timeout (in seconds)</label>
+                <p class="text-muted form-sublabel">The time in seconds the algorithm will terminate if the target is not reached. <span class="fw-bold">Default value: No timeout</span></p>
                 <div class="input-group">
-                    <input type="number" name="timeout" id="timeout" class="form-control" placeholder="When the algorithm will timeout" aria-label="Source" aria-describedby="input-group-left">
+                    <input type="number" name="timeout" id="timeout" class="form-control" placeholder="e.g. 60, 180, 360" aria-label="Source" aria-describedby="input-group-left">
                 </div>
                 
             </div>
             <input type="submit" value="Run" class="btn btn-primary">
         </form>
-        <footer class="footer text-center">
-            <p class="text-muted">&copy; 2025. All rights reserved</p>
+        <footer class="footer text-center mt-2">
+            <p class="text-muted">&copy; 2025. All rights reserved.</p>
         </footer>
         <script src="static/js/script.js"></script>
         <!-- <script src="{{ url_for('static', filename='js/script.js') }}"></script> -->
