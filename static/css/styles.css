@@ -30,6 +30,17 @@ body {
     
 }
 
-#current_node_similarity:first-child{
-    
+#current_node_similarity{
+    display: flex;
 }
+
+#current_node_similarity:first-child, #current_node_similarity:last-child{
+    width: 50%; 
+    overflow-wrap: break-word;
+    /* flex: 0 0 200px; 
+    overflow-wrap: break-word; */
+}
+
+/* #current_node_similarity:last-child{
+    width: 50%;
+} */
