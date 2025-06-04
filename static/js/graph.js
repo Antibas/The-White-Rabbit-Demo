@@ -146,18 +146,21 @@ socket.on('response', function(data) {
     console.log(data);
     if(!JSON.stringify(data).startsWith("{")){
         if(data.startsWith("Similarity between ")){
-            let data2 = data
-                .replace("Similarity between ", "")
-                .trim()
-                .split(":", 2);
-            let entities = data2[0].split(" and ")
-            let similarity = round(Number(data2[1].trim()), 2);
-            if(entities[1]){
-                document.getElementById("current_node").innerHTML = entities[1].trim();
-                document.getElementById("similarity").innerHTML = similarity;
-            }
+
+            // let data2 = data
+            //     .replace("Similarity between ", "")
+            //     .trim()
+            //     .split(":", 2);
+            // let entities = data2[0].split(" and ")
+            // let similarity = round(Number(data2[1].trim()), 2);
+            // if(entities[1]){
+            //     document.getElementById("current_node").innerHTML = entities[1].trim();
+            //     document.getElementById("similarity").innerHTML = similarity;
+            // }
         } else {
-            document.getElementById("logger").innerText = data
+            // let data2 = JSON.parse(clearEntity(data.trim()))
+            // console.log(data2)
+            // document.getElementById("current_node").innerText = clearEntity(data.trim())
         }
     } else if("error" in data){
         handleError(data['status'], data['error']);
@@ -187,6 +190,19 @@ socket.on('response', function(data) {
             addNode(label2, path[2][1]);
             addEdge(edgeLabel, label1, label2)
         }
+    } else if(data['current_path']){
+        // let data2 = JSON.parse(clearEntity(data.trim()))
+        let current_path = data['current_path'];
+        console.log(current_path)
+        let nodes = [];
+        let similarity = "";
+        for(node of current_path){
+            nodes.push(clearEntity(node[0][0]))//+": "+String(round(Number(node[0][1]), 2)))
+            nodes.push(clearEntity(node[2][0]))//+": "+String(round(Number(node[2][1]), 2)))
+            similarity = String(round(Number(node[2][1]), 2))
+        }
+        document.getElementById("current_node").innerHTML = nodes.filter((value, index, array) => array.indexOf(value) === index).join("<br>&darr;<br>")//clearEntity(JSON.stringify(data['current_path']))
+        document.getElementById("similarity").innerHTML = similarity;
     } else {
         handleError(504, "Timeout");
     }
