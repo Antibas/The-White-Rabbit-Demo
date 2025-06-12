@@ -31,6 +31,10 @@ socketio = SocketIO(app)
 def index():
     return render_template('index.html')
 
+@app.route("/about", methods=["GET"])
+def about():
+    return render_template('about.html')
+
 @app.route("/graph", methods=["POST"])
 def graph():
     body = request.form
@@ -96,4 +100,4 @@ def start_algorithm(msg: str):
 if __name__ == "__main__":
     LOGGER.info("Demo starting")
     # app.run(host=getenv("APP_HOST", "0.0.0.0"), port=getenv("APP_PORT", "8000"), debug=True)
-    socketio.run(app, host=getenv("APP_HOST", "0.0.0.0"), port=getenv("APP_PORT", "8000"), debug=True)
+    socketio.run(app, host=getenv("APP_HOST", "0.0.0.0"), port=getenv("APP_PORT", "8000"), debug=True, allow_unsafe_werkzeug=True)
