@@ -7,15 +7,20 @@ const data = {
     nodes: nodes,
     edges: edges
 };
-const loader = document.getElementById("loader");
-const results = document.getElementById("results");
-const error = document.getElementById("error");
+// const loader = document.getElementById("loader");
+// const results = document.getElementById("results");
+// const error = document.getElementById("error");
+
+let focused = "1"
 
 let time = 0;
 let pathLength = 0;
 let pc = 0;
 let ta = 0;
 let paths = [];
+
+let source;
+let target;
 
 const algo_body = document.getElementById("algorithm_body");
 
@@ -81,10 +86,11 @@ network.once("stabilizationIterationsDone", function () {
 
 function addNode(nodeId, label) {
     try{
+        if(focused === "2") nodeId += "2";
         let nodeLabel = clearEntity(nodeId);
         label = round(Number(label), 2)
-        // if(label == 0 || label == 1){
-        if(nodes.length == 0 || nodes.length == pathLength){
+        // nodes.length == 0 || nodes.length == pathLength
+        if(nodeLabel.startsWith(source) || nodeLabel.startsWith(target)){
             nodes.add({ id: nodeId, label: nodeLabel, color: {
                 border: "#e6b000",
                 background: "#000000",
@@ -108,6 +114,10 @@ function addNode(nodeId, label) {
 
 function addEdge(label, from, to) {
     // if(label == "reached") return;
+    if(focused === "2"){
+        from += "2";
+        to += "2";
+    }
     label = clearEntity(label)
     edges.add({ id: edgeId, from: from, to: to, label: label });
     edgeId++;
@@ -137,37 +147,23 @@ function clearEntity(entity){
 }
 
 function handleError(status, error_msg){
-    loader.classList.add("visually-hidden");
-    error.classList.remove("visually-hidden");
-    document.getElementById("error").innerHTML = `<span class="fw-bold">Error ${status}:</span> ${error_msg}`
+    document.getElementById("loader"+focused).classList.add("visually-hidden");
+    document.getElementById("error"+focused).classList.remove("visually-hidden");
+    document.getElementById("error"+focused).innerHTML = `<span class="fw-bold">Error ${status}:</span> ${error_msg}`
 }
 
 socket.on('response', function(data) {
     console.log(data);
+    const message = document.getElementById("message"+focused);
     if(!JSON.stringify(data).startsWith("{")){
-        if(data.startsWith("Similarity between ")){
-
-            // let data2 = data
-            //     .replace("Similarity between ", "")
-            //     .trim()
-            //     .split(":", 2);
-            // let entities = data2[0].split(" and ")
-            // let similarity = round(Number(data2[1].trim()), 2);
-            // if(entities[1]){
-            //     document.getElementById("current_node").innerHTML = entities[1].trim();
-            //     document.getElementById("similarity").innerHTML = similarity;
-            // }
-        } else {
-            // let data2 = JSON.parse(clearEntity(data.trim()))
-            // console.log(data2)
-            // document.getElementById("current_node").innerText = clearEntity(data.trim())
-        }
+        message.innerText = data;
     } else if("error" in data){
         handleError(data['status'], data['error']);
+        message.innerText = "";
     } else if(data['length']){
         document.getElementById("wait").innerHTML = "";
-        loader.classList.add("visually-hidden");
-        results.classList.remove("visually-hidden");
+        document.getElementById("loader"+focused).classList.add("visually-hidden");
+        document.getElementById("results"+focused).classList.remove("visually-hidden");
 
         time = data["time"];
         pathLength = data["length"];
@@ -176,10 +172,10 @@ socket.on('response', function(data) {
         paths = data["path"];
         if(pathLength == 1) pathLength = Math.max(pathLength, paths.length);
 
-        document.getElementById("time").innerHTML = `<span class="fw-bold">Time:</span> ${time} seconds`
-        document.getElementById("length").innerHTML = `<span class="fw-bold">Length:</span> ${pathLength}`
-        document.getElementById("pc").innerHTML = `<span class="fw-bold">PC:</span> ${pc}`
-        document.getElementById("ta").innerHTML = `<span class="fw-bold">TA:</span> ${ta}`
+        document.getElementById("time"+focused).innerHTML = `<span class="fw-bold">Time:</span> ${time} seconds`
+        document.getElementById("length"+focused).innerHTML = `<span class="fw-bold">Length:</span> ${pathLength}`
+        document.getElementById("pc"+focused).innerHTML = `<span class="fw-bold">PC:</span> ${pc}`
+        document.getElementById("ta"+focused).innerHTML = `<span class="fw-bold">TA:</span> ${ta}`
 
         for(let path of paths){
             let label1 = clearEntity(path[0][0]);
@@ -190,10 +186,10 @@ socket.on('response', function(data) {
             addNode(label2, path[2][1]);
             addEdge(edgeLabel, label1, label2)
         }
+        message.innerText = "";
     } else if(data['current_path']){
         // let data2 = JSON.parse(clearEntity(data.trim()))
         let current_path = data['current_path'];
-        console.log(current_path)
         let nodes = [];
         let similarity = "";
         for(node of current_path){
@@ -201,26 +197,35 @@ socket.on('response', function(data) {
             nodes.push(clearEntity(node[2][0]))//+": "+String(round(Number(node[2][1]), 2)))
             similarity = String(round(Number(node[2][1]), 2))
         }
-        document.getElementById("current_node").innerHTML = nodes.filter((value, index, array) => array.indexOf(value) === index).join("<br>&darr;<br>")//clearEntity(JSON.stringify(data['current_path']))
-        document.getElementById("similarity").innerHTML = similarity;
+        document.getElementById("current_node"+focused).innerHTML = nodes.filter((value, index, array) => array.indexOf(value) === index).join("<br>&darr;<br>")//clearEntity(JSON.stringify(data['current_path']))
+        document.getElementById("similarity"+focused).innerHTML = similarity;
+        message.innerText = "";
     } else {
         handleError(504, "Timeout");
+        message.innerText = "";
     }
 });
 
-document.addEventListener("DOMContentLoaded", (ev) => {
+function startAlgorithm(algorithm=undefined){
     let algorithm_body = algo_body.value;
     algorithm_body = algorithm_body.replace("ImmutableMultiDict", "")
         .replaceAll("(", "[")
         .replaceAll(")", "]")
         .replaceAll("'", "\"");
     algorithm_body = JSON.parse(algorithm_body)[0];
+    if(algorithm){
+        algorithm_body[0][1] = algorithm;
+        focused = "2"
+        document.getElementById("body2").classList.remove("visually-hidden")
+        document.getElementById("query_expansion_button").classList.add("visually-hidden")
+    }
     console.log(algorithm_body);
-    // console.log(algorithm_body[5][0]);
     const accuracy = document.getElementById("accuracy");
     const timeout = document.getElementById("timeout");
     const dataset = document.getElementById("dataset");
     const embedding = document.getElementById("embedding");
+    source = algorithm_body[3][1];
+    target = algorithm_body[4][1];
     accuracy.innerHTML = `Accuracy: ${algorithm_body[5][1]||1}`
     if(algorithm_body[6][1]){
         timeout.innerHTML = `Timeout in ${algorithm_body[6][1]} seconds`
@@ -228,10 +233,14 @@ document.addEventListener("DOMContentLoaded", (ev) => {
     else {
         timeout.innerHTML = "No timeout"
     }
-    dataset.innerHTML = `Dataset: ${algorithm_body[2][1]}`
+    dataset.innerHTML = `Dataset: ${algorithm_body[3][1]}`
     if(algorithm_body[0][1] === "embedding"){
         embedding.classList.remove("visually-hidden")
         embedding.innerHTML = `Embedding: ${algorithm_body[1][1]}`
     }
     socket.send(JSON.stringify(algorithm_body));
+}
+
+document.addEventListener("DOMContentLoaded", (ev) => {
+    startAlgorithm();
 })

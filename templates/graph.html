@@ -33,44 +33,85 @@
                 <p class="sm" id="wait">Please wait...</p>
             </div>
             
-            <div class="card-body text-center">
-                <div class="block justify-content-center" id="loader">
+            <div class="card-body text-center" id="body1">
+                <div class="block justify-content-center" id="loader1">
                     <div class="spinner-border" role="status">
                         <span class="sr-only">Loading...</span>
                     </div>
+                    <p class="text-wrap mt-2" id="message1"></p>
                     <div class="d-flex justify-content-center">
-                        <ul class="d-flex list-group list-group-horizontal-lg mt-2 w-100 shadow-sm" id="current_node_similarity">
+                        <ul class="d-flex list-group list-group-horizontal-lg mt-2 w-100 shadow-sm" id="current_node_similarity1">
                             <li class="list-group-item flex-fill text-center">
-                                <h3 class="h3" id="current_node">
+                                <h3 class="h3" id="current_node1">
 
                                 </h3>
                             </li>
                             <li class="list-group-item text-center">
-                                <h3 class="h3" id="similarity">
+                                <h3 class="h3" id="similarity1">
 
                                 </h3>
                             </li>
                         </ul>
                     </div>
                 </div>
-                <h3 class="h3 alert alert-danger visually-hidden" role="alert" id="error">
+                <h3 class="h3 alert alert-danger visually-hidden" role="alert" id="error1">
                 </h3>
-                <div class="visually-hidden" id="results">
+                <div class="visually-hidden" id="results1">
                     <div class="d-flex justify-content-center">
                         <ul class="list-group list-group-horizontal shadow-sm">
-                            <li class="list-group-item" id="time"></li>
-                            <li class="list-group-item" id="length"></li>
-                            <li class="list-group-item" id="pc"></li>
-                            <li class="list-group-item" id="ta"></li>
+                            <li class="list-group-item" id="time1"></li>
+                            <li class="list-group-item" id="length1"></li>
+                            <li class="list-group-item" id="pc1"></li>
+                            <li class="list-group-item" id="ta1"></li>
                         </ul>
                     </div>
                     <div class="d-flex justify-content-center mt-4">
-                        <!-- <h3 class="h3">Path:</h3> -->
                         <div id="graph" class="shadow-lg"></div>
                     </div>
                 </div>
             </div>
+            <div class="card-body text-center visually-hidden" id="body2">
+                <h3 class="h3">Query Expansion</h3>
+                <div class="block justify-content-center" id="loader2">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <p class="text-wrap mt-2" id="message2"></p>
+                    <div class="d-flex justify-content-center">
+                        <ul class="d-flex list-group list-group-horizontal-lg mt-2 w-100 shadow-sm" id="current_node_similarity2">
+                            <li class="list-group-item flex-fill text-center">
+                                <h3 class="h3" id="current_node2">
+
+                                </h3>
+                            </li>
+                            <li class="list-group-item text-center">
+                                <h3 class="h3" id="similarity2">
+
+                                </h3>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <h3 class="h3 alert alert-danger visually-hidden" role="alert" id="error2">
+                </h3>
+                <div class="visually-hidden" id="results2">
+                    <div class="d-flex justify-content-center">
+                        <ul class="list-group list-group-horizontal shadow-sm">
+                            <li class="list-group-item" id="time2"></li>
+                            <li class="list-group-item" id="length2"></li>
+                            <li class="list-group-item" id="pc2"></li>
+                            <li class="list-group-item" id="ta2"></li>
+                        </ul>
+                    </div>
+                    <!-- <div class="d-flex justify-content-center mt-4">
+                        <div id="graph2" class="shadow-lg"></div>
+                    </div> -->
+                </div>
+            </div>
             <div class="card-footer text-center">
+                {%if body['algorithm'] != "query-expansion" %}
+                    <button type="button" class="btn btn-primary" onclick="startAlgorithm('query-expansion')" id="query_expansion_button">Compare with Query Expansion</button>
+                {%endif%}
                 <a href="/" class="btn btn-secondary">Go Back</a>
             </div>
         </div>
