@@ -1,7 +1,8 @@
 services:
-  white-rabbit: 
+  white-rabbit:
     container_name: white-rabbit
     build: ./
+    image: white-rabbit
     restart: on-failure
     networks:
       - white-rabbit-network

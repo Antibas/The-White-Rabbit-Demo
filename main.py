@@ -21,7 +21,7 @@ NODES = load_nodes()
 app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
-redis_url = from_url('redis://'+getenv('REDIS_HOST', 'redis')+":"+getenv('REDIS_PORT', '6379'))
+redis_url = from_url('redis://'+getenv('REDIS_HOST', 'redis-server')+":"+getenv('REDIS_PORT', '6379'))
 app.config['SESSION_REDIS'] = redis_url
 
 # Socket
