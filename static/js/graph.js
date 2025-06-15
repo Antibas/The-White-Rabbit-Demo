@@ -224,6 +224,8 @@ function startAlgorithm(algorithm=undefined){
     const timeout = document.getElementById("timeout");
     const dataset = document.getElementById("dataset");
     const embedding = document.getElementById("embedding");
+    algorithm_body[3][1] = algorithm_body[3][1].replaceAll(" ", "_");
+    algorithm_body[4][1] = algorithm_body[4][1].replaceAll(" ", "_");
     source = algorithm_body[3][1];
     target = algorithm_body[4][1];
     accuracy.innerHTML = `Accuracy: ${algorithm_body[5][1]||1}`
@@ -243,4 +245,8 @@ function startAlgorithm(algorithm=undefined){
 
 document.addEventListener("DOMContentLoaded", (ev) => {
     startAlgorithm();
+})
+
+document.addEventListener("beforeunload", (ev) =>{
+    socket.emit('disconnect_me');
 })

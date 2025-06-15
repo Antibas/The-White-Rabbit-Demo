@@ -1,10 +1,10 @@
-from json import dump, loads
+from json import loads
 from random import choice
-from flask import Flask, render_template, request
-from flask_socketio import SocketIO, emit
+from flask import render_template, request
+from app import app
+from flask_socketio import SocketIO, disconnect, emit
 from dotenv import load_dotenv
 from os import getenv
-from redis import from_url
 from utils import import_datasets, load_nodes
 from white_rabbit.utils.enums import EmbeddingType
 from white_rabbit.utils.logger import LOGGER
@@ -12,17 +12,8 @@ from white_rabbit.utils.utils import load_model, timeout
 
 load_dotenv(override=True)
 
-app = Flask(__name__)
-
-
+alg_id = ""
 NODES = load_nodes()
-
-# Redis configuration
-app.config['SESSION_TYPE'] = 'redis'
-app.config['SESSION_PERMANENT'] = False
-app.config['SESSION_USE_SIGNER'] = True
-redis_url = from_url('redis://'+getenv('REDIS_HOST', 'redis-server')+":"+getenv('REDIS_PORT', '6379'))
-app.config['SESSION_REDIS'] = redis_url
 
 # Socket
 socketio = SocketIO(app)
@@ -44,8 +35,13 @@ def graph():
 def get_random_entity():
     return str(choice(NODES))
 
+@socketio.on('disconnect_me')
+def disconnect_user():
+    LOGGER.info('Stopping algorithm...')
+    disconnect()
+
 @socketio.on("message")
-def start_algorithm(msg: str):
+def process_message(msg: str):
     params = {}
     for param in loads(msg):
         if param[1]:
