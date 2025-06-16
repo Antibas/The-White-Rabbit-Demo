@@ -206,15 +206,24 @@ socket.on('response', function(data) {
     }
 });
 
-function startAlgorithm(algorithm=undefined){
+function getAlgorithmBody(){
     let algorithm_body = algo_body.value;
+    let ret = {};
     algorithm_body = algorithm_body.replace("ImmutableMultiDict", "")
         .replaceAll("(", "[")
         .replaceAll(")", "]")
         .replaceAll("'", "\"");
     algorithm_body = JSON.parse(algorithm_body)[0];
+    for(let pair of algorithm_body){
+        if(pair[1]) ret[pair[0]] = pair[1]
+    }
+    return ret;
+}
+
+function startAlgorithm(algorithm=undefined){
+    let algorithm_body = getAlgorithmBody();
     if(algorithm){
-        algorithm_body[0][1] = algorithm;
+        algorithm_body["algorithm"] = algorithm;
         focused = "2"
         document.getElementById("body2").classList.remove("visually-hidden")
         document.getElementById("query_expansion_button").classList.add("visually-hidden")
@@ -224,21 +233,21 @@ function startAlgorithm(algorithm=undefined){
     const timeout = document.getElementById("timeout");
     const dataset = document.getElementById("dataset");
     const embedding = document.getElementById("embedding");
-    algorithm_body[3][1] = algorithm_body[3][1].replaceAll(" ", "_");
-    algorithm_body[4][1] = algorithm_body[4][1].replaceAll(" ", "_");
-    source = algorithm_body[3][1];
-    target = algorithm_body[4][1];
-    accuracy.innerHTML = `Accuracy: ${algorithm_body[5][1]||1}`
-    if(algorithm_body[6][1]){
-        timeout.innerHTML = `Timeout in ${algorithm_body[6][1]} seconds`
+    algorithm_body["source"] = algorithm_body["source"].replaceAll(" ", "_");
+    algorithm_body["target"] = algorithm_body["target"].replaceAll(" ", "_");
+    source = algorithm_body["source"];
+    target = algorithm_body["target"];
+    accuracy.innerHTML = `Accuracy: ${"accuracy" in algorithm_body?algorithm_body["accuracy"]:1}`
+    if(algorithm_body["timeout"]){
+        timeout.innerHTML = `Timeout in ${algorithm_body["timeout"]} seconds`
     }
     else {
         timeout.innerHTML = "No timeout"
     }
-    dataset.innerHTML = `Dataset: ${algorithm_body[3][1]}`
-    if(algorithm_body[0][1] === "embedding"){
+    dataset.innerHTML = `Dataset: ${algorithm_body["dataset"]}`
+    if(algorithm_body["algorithm"] === "embedding"){
         embedding.classList.remove("visually-hidden")
-        embedding.innerHTML = `Embedding: ${algorithm_body[1][1]}`
+        embedding.innerHTML = `Embedding: ${algorithm_body["embedding"]}`
     }
     socket.send(JSON.stringify(algorithm_body));
 }

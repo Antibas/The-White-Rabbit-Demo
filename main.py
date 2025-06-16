@@ -42,10 +42,7 @@ def disconnect_user():
 
 @socketio.on("message")
 def process_message(msg: str):
-    params = {}
-    for param in loads(msg):
-        if param[1]:
-            params[param[0]] = param[1]
+    params = loads(msg)
     
     source: str = params["source"]
     target: str = params["target"]

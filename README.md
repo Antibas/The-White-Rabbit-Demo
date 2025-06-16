@@ -35,6 +35,9 @@ SBERT_MODEL=all-mpnet-base-v2
     APP_PORT=8000
     REDIS_HOST=redis-server
     REDIS_PORT=6379
+    WORKER_PORT=8080
+
+    LMDB_FORCE_SYSTEM=1
     ```
     2. `sudo docker-compose up --build -d`
 7. Navigate to http://127.0.0.1:8000/ and follow the instructions on the page to 
